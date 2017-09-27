@@ -38,7 +38,13 @@ class WebFactionClient(WebFactionAPI):
 
 class Maestro:
     def __init__(self):
-        self.client = self._create_client()
+        self._client = None
+
+    @property
+    def client(self):
+        if self._client is None:
+            self._client = self._create_client()
+        return self._client
 
     def _create_client(self) -> WebFactionClient:
         client = WebFactionClient(
