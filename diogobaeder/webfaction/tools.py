@@ -266,16 +266,15 @@ class Project(Component):
 
 
 class Website(Component):
-    COMMAND = 'cd {} && .env/bin/circusd --daemon server.cfg'.format(
-        env.project_dir)
-
     def prepare(self):
+        command = 'cd {} && .env/bin/circusd --daemon server.cfg'.format(
+            env.project_dir)
         for d in self.all_subdomains():
             self.create_website(d)
 
-        self.add_on_reboot(self.COMMAND)
+        self.add_on_reboot(command)
         if not self.is_running('circusd'):
-            run(self.COMMAND)
+            run(command)
         else:
             self.reload_config()
 
