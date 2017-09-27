@@ -19,7 +19,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'cryptography',
-        'Fabric',
+        'Fabric3',
         'keyring',
         'keyrings.alt',
         'SecretStorage',
