@@ -1,9 +1,10 @@
+from io import StringIO
 from os.path import join
 from uuid import uuid4
 
 from fabric import colors
 from fabric.api import (
-    cd, env, prefix, put, run, shell_env, warn_only
+    cd, env, get, prefix, put, run, shell_env, warn_only
 )
 from fabric.contrib.files import upload_template, exists
 from wfcli import WebFactionAPI, WebfactionWebsiteToSsl
@@ -185,6 +186,10 @@ class Applications(Component):
 
 
 class SSH(Component):
+    def prepare(self):
+        self.create_keys()
+        self.ensure_authorized_key()
+
     def ensure_authorized_key(self):
         info('ensuring authorized key is set')
         with open(env.key_filename, encoding='utf-8') as f:
@@ -192,12 +197,21 @@ class SSH(Component):
 
         path = '/tmp/{}'.format(uuid4())
         self.client.write_file(path, key, 'w')
-        self.client.command('mkdir -p ~/.ssh && chmod 700 ~/.ssh')
         self.client.command((
             'grep -a "`cat {0}`" ~/.ssh/authorized_keys || '
             'echo "\n`cat {0}`\n" >> ~/.ssh/authorized_keys'
         ).format(path))
         self.client.command('rm {}'.format(path))
+
+    def create_keys(self):
+        self.client.command('mkdir -p ~/.ssh && chmod 700 ~/.ssh')
+        self.client.command('ssh-keygen -P "" -t rsa -f ~/.ssh/{}-key'.format(
+            env.project))
+        buffer = StringIO()
+        get('~/.ssh/{}-key.pub', buffer)
+        public_key = buffer.getvalue()
+        info('Make sure you paste the public key in the repo server:')
+        print('\n{}\n'.format(public_key))
 
 
 class Git(Component):
